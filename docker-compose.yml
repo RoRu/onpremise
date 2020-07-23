@@ -181,9 +181,15 @@ services:
         BASE_IMAGE: 'sentry-onpremise-local'
     command: '"0 0 * * * gosu sentry sentry cleanup --days $SENTRY_EVENT_RETENTION_DAYS"'
   nginx:
+    labels:
+      traefik.frontend.rule: 'Host:sentry.oc.uptr.dev'
+      traefik.port: 80
     << : *restart_policy
-    ports:
-      - '9000:80/tcp'
+    # ports:
+      # - '9000:80/tcp'
+    networks: 
+      - default
+      - traefik
     image: 'nginx:alpine'
     volumes:
       - type: bind
@@ -225,3 +231,9 @@ volumes:
   sentry-kafka-log:
   sentry-smtp-log:
   sentry-clickhouse-log:
+
+networks: 
+  default:
+    driver: bridge
+  traefik:
+    external: true
