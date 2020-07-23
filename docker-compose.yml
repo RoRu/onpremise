@@ -58,7 +58,7 @@ services:
       - 'sentry-redis:/data'
   postgres:
     << : *restart_policy
-    image: 'postgres:9.6'
+    image: 'postgres:12'
     environment:
       POSTGRES_HOST_AUTH_METHOD: 'trust'
     volumes:
@@ -90,6 +90,8 @@ services:
       KAFKA_LOG4J_LOGGERS: 'kafka.cluster=WARN,kafka.controller=WARN,kafka.coordinator=WARN,kafka.log=WARN,kafka.server=WARN,kafka.zookeeper=WARN,state.change.logger=WARN'
       KAFKA_LOG4J_ROOT_LOGLEVEL: 'WARN'
       KAFKA_TOOLS_LOG4J_LOGLEVEL: 'WARN'
+      KAFKA_OFFSETS_TOPIC_NUM_PARTITIONS: '2'
+      KAFKA_LOG_RETENTION_HOURS: '24'
     volumes:
       - 'sentry-kafka:/var/lib/kafka/data'
       - 'sentry-kafka-log:/var/lib/kafka/log'
@@ -182,7 +184,7 @@ services:
     << : *restart_policy
     ports:
       - '9000:80/tcp'
-    image: 'nginx:1.16'
+    image: 'nginx:alpine'
     volumes:
       - type: bind
         read_only: true
