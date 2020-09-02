@@ -1,6 +1,8 @@
 version: '3.4'
 x-restart-policy: &restart_policy
   restart: unless-stopped
+  networks: 
+    - default
 x-sentry-defaults: &sentry_defaults
   << : *restart_policy
   build:
@@ -58,7 +60,7 @@ services:
       - 'sentry-redis:/data'
   postgres:
     << : *restart_policy
-    image: 'postgres:9.6'
+    image: 'postgres:12'
     environment:
       POSTGRES_HOST_AUTH_METHOD: 'trust'
     volumes:
@@ -90,6 +92,8 @@ services:
       KAFKA_LOG4J_LOGGERS: 'kafka.cluster=WARN,kafka.controller=WARN,kafka.coordinator=WARN,kafka.log=WARN,kafka.server=WARN,kafka.zookeeper=WARN,state.change.logger=WARN'
       KAFKA_LOG4J_ROOT_LOGLEVEL: 'WARN'
       KAFKA_TOOLS_LOG4J_LOGLEVEL: 'WARN'
+      KAFKA_OFFSETS_TOPIC_NUM_PARTITIONS: '2'
+      KAFKA_LOG_RETENTION_HOURS: '24'
     volumes:
       - 'sentry-kafka:/var/lib/kafka/data'
       - 'sentry-kafka-log:/var/lib/kafka/log'
@@ -179,10 +183,13 @@ services:
         BASE_IMAGE: 'sentry-onpremise-local'
     command: '"0 0 * * * gosu sentry sentry cleanup --days $SENTRY_EVENT_RETENTION_DAYS"'
   nginx:
+    # labels:
+    #   traefik.frontend.rule: 'Host:sentry.oc.uptr.dev'
+    #   traefik.port: 80
     << : *restart_policy
     ports:
       - '9000:80/tcp'
-    image: 'nginx:1.16'
+    image: 'nginx:alpine'
     volumes:
       - type: bind
         read_only: true
@@ -223,3 +230,9 @@ volumes:
   sentry-kafka-log:
   sentry-smtp-log:
   sentry-clickhouse-log:
+
+networks: 
+  default:
+    driver: bridge
+  # traefik:
+  #   external: true
